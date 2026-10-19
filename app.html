@@ -1,0 +1,734 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#FAF7F2">
+<title>生活小规划师</title>
+<style>
+:root{
+  --sage:#8FB996; --primary-color:#8FB996; --primary-soft:#8FB996;
+  --primary-deep:#4F7057; --primary-light:#EAF3EC;
+  --accent2:#E8A87C; --accent2-deep:#B2663A;
+  --cream:#FAF7F2; --bg-sunken:#F1EBE2;
+  --ink:#33413A; --text-main:#33413A; --muted:#8A8178; --text-muted:#8A8178;
+  --line:#ECE6DC; --border-color:#E7E3DA;
+  --card:#FFFFFF;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%}
+body{
+  background:var(--cream); color:var(--ink);
+  font-family:"PingFang SC","Microsoft YaHei","Hiragino Sans GB",sans-serif;
+  font-size:15px; line-height:1.6;
+}
+#app{max-width:480px;margin:0 auto;height:100dvh;display:flex;flex-direction:column;background:var(--cream);position:relative;overflow:hidden;box-shadow:0 0 30px rgba(51,65,58,.08)}
+
+/* ---------- 页面容器 ---------- */
+.page{display:none;flex:1;flex-direction:column;min-height:0}
+.page.active{display:flex}
+.page-header{
+  flex:0 0 auto;display:flex;align-items:center;gap:10px;
+  padding:calc(env(safe-area-inset-top) + 14px) 18px 12px;background:var(--cream);
+}
+.page-header h2{font-size:19px;font-weight:700}
+.ph-sub{font-size:12px;color:var(--muted)}
+.header-spacer{flex:1}
+.header-chip{font-size:11px;background:rgba(143,185,150,.16);color:var(--primary-deep);border-radius:100px;padding:4px 12px}
+.back-btn{border:1px solid var(--line);background:#fff;border-radius:10px;width:32px;height:32px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--ink)}
+.back-btn svg{width:16px;height:16px}
+.page-body{flex:1;overflow-y:auto;padding:4px 16px 16px;-webkit-overflow-scrolling:touch}
+
+/* ---------- 通用卡片 ---------- */
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px;margin-bottom:12px}
+.card-title{font-size:13.5px;font-weight:700;display:flex;align-items:center;gap:7px;margin-bottom:8px}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--sage);display:inline-block}
+.section-label{font-size:12px;color:var(--muted);margin:14px 2px 8px;letter-spacing:.04em}
+.callout{border-radius:12px;padding:10px 12px;font-size:12px;line-height:1.6}
+.callout.safe{background:rgba(232,168,124,.1);border:1px solid rgba(232,168,124,.35);color:#8A5A33}
+.co-title{display:block;font-weight:700;margin-bottom:2px}
+@keyframes cardIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+
+/* ---------- 对话 ---------- */
+.quick-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:4px}
+.quick-chip{border:1px solid var(--line);background:#fff;border-radius:14px;padding:10px 4px;font:inherit;font-size:12px;color:var(--primary-deep);cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:5px}
+.quick-chip.warm{color:var(--accent2-deep)}
+.qc-ico svg{width:20px;height:20px}
+.example-list{display:flex;flex-direction:column;gap:6px}
+.example-item{border:1px dashed var(--line);background:transparent;border-radius:12px;padding:9px 12px;font:inherit;font-size:12.5px;color:var(--muted);text-align:left;cursor:pointer;display:flex;gap:8px}
+.ei-num{color:var(--sage);font-weight:700;font-size:11px}
+.msg{display:flex;margin-bottom:10px;animation:cardIn 200ms ease-out both}
+.msg.user{justify-content:flex-end}
+.ai-avatar{flex:0 0 30px;width:30px;height:30px;border-radius:50%;background:var(--sage);display:flex;align-items:center;justify-content:center;margin-right:8px}
+.ai-avatar svg{width:16px;height:16px}
+.bubble{max-width:82%;padding:10px 13px;border-radius:14px;font-size:13.5px;line-height:1.65}
+.bubble.ai{background:#fff;border:1px solid var(--line);border-top-left-radius:4px}
+.bubble.user-b{background:var(--sage);color:#fff;border-top-right-radius:4px}
+.composer{flex:0 0 auto;padding:10px 14px calc(env(safe-area-inset-bottom) + 10px);background:var(--cream);border-top:1px solid var(--line)}
+.composer-inner{display:flex;align-items:center;gap:8px;background:#fff;border:1px solid var(--line);border-radius:100px;padding:5px 6px 5px 16px}
+.composer-inner input{flex:1;border:none;outline:none;font:inherit;font-size:14px;background:transparent;min-width:0}
+.composer-actions{display:flex;gap:6px}
+.ico-btn,.send-btn{border:none;border-radius:50%;width:36px;height:36px;display:flex;align-items:center;justify-content:center;cursor:pointer}
+.ico-btn{background:transparent;color:var(--muted)}
+.send-btn{background:var(--sage);color:#fff}
+.ico-btn svg,.send-btn svg{width:16px;height:16px}
+
+/* ---------- 目标页 ---------- */
+.goal-hero{background:linear-gradient(135deg,#EAF3EC,#FDF3E9);border:1px solid rgba(143,185,150,.4);border-radius:16px;padding:16px;margin-bottom:12px}
+.gh-top{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}
+.goal-hero h3{font-size:16px}
+.gh-meta{font-size:11.5px;color:var(--muted);margin-top:4px}
+.countdown{text-align:center;background:#fff;border-radius:12px;padding:8px 12px;flex:0 0 auto}
+.countdown b{display:block;font-size:20px;color:var(--primary-deep)}
+.countdown span{font-size:10.5px;color:var(--muted)}
+.progress-track{height:8px;background:#fff;border-radius:100px;margin-top:12px;overflow:hidden}
+.progress-fill{height:100%;background:linear-gradient(90deg,var(--sage),var(--accent2));border-radius:100px;transition:width .5s}
+.ms-block{padding:10px 2px;border-bottom:1px dashed var(--line);position:relative;transition:background .15s}
+.ms-block:hover{background:rgba(143,185,150,.05)}
+.ms-block:last-child{border-bottom:none}
+.ms-t{font-size:13px;font-weight:700;cursor:pointer;padding:2px 0;border-radius:4px;display:inline-block}
+.ms-t:hover{background:rgba(143,185,150,.1)}
+.ms-d{font-size:12px;color:var(--muted);line-height:1.6;margin-top:2px;cursor:pointer;padding:2px 0;border-radius:4px}
+.ms-d:hover{background:rgba(232,168,124,.08)}
+.ms-days{font-size:10.5px;color:var(--primary-deep);background:rgba(143,185,150,.14);border-radius:100px;padding:2px 9px;margin-left:8px}
+.ms-edit-row{display:flex;gap:6px;margin-top:4px}
+.ms-edit-row input, .ms-edit-row textarea{width:100%;font:inherit;padding:6px 8px;border:1px solid var(--sage,#8FB996);border-radius:8px;background:#fff;outline:none}
+.ms-edit-row textarea{min-height:52px;resize:vertical}
+.ms-actions{position:absolute;right:0;top:6px;display:flex;gap:2px;opacity:0;transition:opacity .15s}
+.ms-block:hover .ms-actions{opacity:1}
+.ms-actions button{border:none;background:transparent;color:var(--muted,#8A8178);cursor:pointer;font-size:13px;padding:2px 6px;border-radius:6px}
+.ms-actions button:hover{background:rgba(143,185,150,.15);color:var(--sage-deep)}
+.ms-add{margin-top:6px;padding:8px 0;border:1px dashed var(--sage,#8FB996);border-radius:10px;background:rgba(143,185,150,.06);color:var(--sage-deep,#4F7057);text-align:center;font-size:12.5px;cursor:pointer}
+.ms-add:hover{background:rgba(143,185,150,.14)}
+
+/* ---------- 滑块 / 开关 / 图表 ---------- */
+.scale-box{text-align:center}
+.scale-cap{font-size:12px;color:var(--muted)}
+.scale-val{font-size:26px;font-weight:700;color:var(--primary-deep);margin:4px 0}
+.emotion-range{width:100%;accent-color:var(--sage)}
+.range-ends{display:flex;justify-content:space-between;font-size:10.5px;color:var(--muted)}
+.switch-row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 0;border-bottom:1px dashed var(--line)}
+.switch-row:last-child{border-bottom:none}
+.sr-label{font-size:13.5px;font-weight:600}
+.sr-desc{font-size:11.5px;color:var(--muted)}
+.switch{flex:0 0 auto;width:44px;height:26px;border-radius:100px;border:none;background:#D8D2C6;cursor:pointer;position:relative;transition:.2s}
+.switch::after{content:"";position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#fff;transition:.2s;box-shadow:0 1px 3px rgba(0,0,0,.2)}
+.switch.on{background:var(--sage)}
+.switch.on::after{left:21px}
+.chart-mount{height:180px}
+.mini-stat{display:flex;margin-top:12px;background:#fff;border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.ms-cell{flex:1;text-align:center;padding:12px 4px}
+.ms-num{font-size:21px;font-weight:700;color:var(--primary-deep)}
+.ms-cap{font-size:10.5px;color:var(--muted)}
+.profile-row{display:flex;align-items:center;gap:12px}
+.avatar{width:46px;height:46px;border-radius:50%;background:var(--sage);color:#fff;display:flex;align-items:center;justify-content:center;font-size:19px;font-weight:700}
+.pr-name{font-size:15.5px;font-weight:700}
+.pr-sub{font-size:11.5px;color:var(--muted)}
+
+/* ---------- 计算器 ---------- */
+.calc-display{background:var(--bg-sunken);border-radius:12px;padding:12px 14px;margin-bottom:10px;text-align:right}
+.cd-expr{font-size:12px;color:var(--muted)}
+.cd-result{font-size:26px;font-weight:700;font-variant-numeric:tabular-nums}
+.calc-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.calc-grid button{border:1px solid var(--line);background:#fff;border-radius:12px;padding:13px 0;font:inherit;font-size:17px;cursor:pointer}
+.calc-grid button.op{background:var(--primary-light);color:var(--primary-deep);border-color:transparent}
+.calc-grid button.eq{background:var(--sage);color:#fff;border-color:transparent}
+
+/* ---------- 底部导航 ---------- */
+.page-tabbar{flex:0 0 auto;display:flex;background:#fff;border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom)}
+.tab-item{flex:1;border:none;background:transparent;padding:8px 0 6px;font:inherit;font-size:10.5px;color:var(--muted);cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px}
+.tab-item svg{width:20px;height:20px}
+.tab-item.active{color:var(--primary-deep);font-weight:700}
+.mono{font-variant-numeric:tabular-nums}
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- ============ 对话首页 ============ -->
+  <section class="page active" id="page-home">
+    <header class="page-header">
+      <div><h2>你好，小远</h2><span class="ph-sub">今天想先聊点什么？</span></div>
+      <span class="header-spacer"></span>
+      <span class="header-chip" id="home-days">第 1 天</span>
+    </header>
+    <div class="page-body">
+      <div class="quick-grid">
+        <button class="quick-chip" type="button" onclick="navigate('page-plan')"><span class="qc-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M4 12h10M4 18h7"/><path d="M17 15l2 2 4-4"/></svg></span>规划一下</button>
+        <button class="quick-chip warm" type="button" onclick="navigate('page-decision')"><span class="qc-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18M6 8l-3 6a4 4 0 0 0 6 0zM21 8l-3 6a4 4 0 0 0 6 0zM3 8h6M15 8h6"/></svg></span>帮我选</button>
+        <button class="quick-chip" type="button" onclick="navigate('page-mind')"><span class="qc-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4a5 5 0 0 0-5 5c0 3 2 4 2 6h6c0-2 2-3 2-6a5 5 0 0 0-5-5zM10 18h4M11 21h2"/></svg></span>心里有点乱</button>
+        <button class="quick-chip warm" type="button" onclick="navigate('page-tools')"><span class="qc-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="5" y="3" width="14" height="18" rx="3"/><path d="M9 7h6M8 12h.01M12 12h.01M16 12h.01M8 16h.01M12 16h.01M16 16h.01"/></svg></span>帮我算</button>
+      </div>
+
+      <div class="section-label">或者，从一个开场聊起</div>
+      <div class="example-list">
+        <button class="example-item" type="button" onclick="lspSend('我要 3 个月后考雅思，完全不知道从哪开始')"><span class="ei-num">01</span><span>“我要 3 个月后考雅思，完全不知道从哪开始。”</span></button>
+        <button class="example-item" type="button" onclick="lspSend('在纠结要不要换工作，想理一理')"><span class="ei-num">02</span><span>“在纠结要不要换工作，想理一理。”</span></button>
+        <button class="example-item" type="button" onclick="lspSend('最近总是深夜想很多，睡不着')"><span class="ei-num">03</span><span>“最近总是深夜想很多，睡不着。”</span></button>
+      </div>
+
+      <div class="section-label">对话</div>
+      <div id="chat-flow"></div>
+    </div>
+    <div class="composer">
+      <div class="composer-inner">
+        <input type="text" id="chat-input" placeholder="说说你现在的事…" aria-label="消息输入框">
+        <span class="composer-actions">
+          <button class="send-btn" id="chat-send" type="button" aria-label="发送"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12l16-8-6 16-3-6-7-2z"/></svg></button>
+        </span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 我的目标 ============ -->
+  <section class="page" id="page-plan">
+    <header class="page-header">
+      <button class="back-btn" type="button" onclick="navigate('page-home')" aria-label="返回"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button>
+      <div><h2>我的目标</h2><span class="ph-sub">拆解到每一步，就不慌了</span></div>
+    </header>
+    <div class="page-body">
+      <div class="goal-hero">
+        <div class="gh-top">
+          <div>
+            <h3>还没有进行中的目标</h3>
+            <div class="gh-meta">在对话里说「我要 3 个月后…」自动生成</div>
+          </div>
+          <div class="countdown"><b class="mono">--</b><span>天后截止</span></div>
+        </div>
+        <div class="progress-track"><div class="progress-fill" id="plan-progress" style="width:0%"></div></div>
+      </div>
+      <div class="section-label">里程碑</div>
+      <div class="card" id="plan-milestones"><div style="font-size:12.5px;color:var(--muted)">目标生成后，这里会显示 3 个阶段的拆解。点击可编辑</div></div>
+
+      <div class="section-label">手动添加目标</div>
+      <div class="card">
+        <div class="card-title"><span class="dot"></span>自己创建一个目标</div>
+        <input type="text" id="pg-title" placeholder="目标名称，如：3 个月考出雅思 7 分" style="width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:10px;font:inherit;font-size:13.5px;margin-bottom:8px;background:#fff;">
+        <div style="display:flex;gap:8px;margin-bottom:8px;">
+          <select id="pg-domain" style="flex:1;padding:10px 12px;border:1px solid var(--line);border-radius:10px;font:inherit;font-size:13px;background:#fff;">
+            <option value="自定义">自定义目标</option>
+            <option value="学习">学习 / 考试</option>
+            <option value="健身">健身 / 减脂</option>
+            <option value="存钱">存钱 / 理财</option>
+            <option value="工作">工作 / 职场</option>
+            <option value="健康">健康 / 睡眠</option>
+          </select>
+          <input type="number" id="pg-days" placeholder="天数" min="1" max="3650" style="width:88px;padding:10px 12px;border:1px solid var(--line);border-radius:10px;font:inherit;font-size:13px;background:#fff;">
+        </div>
+        <button type="button" id="pg-add" style="width:100%;padding:11px 0;border:none;border-radius:10px;background:var(--sage);color:#fff;font:inherit;font-size:14px;font-weight:600;cursor:pointer;">创建目标并自动拆解</button>
+      </div>
+
+      <div class="section-label">全部目标</div>
+      <div class="card"><div id="plan-goal-list"></div></div>
+    </div>
+  </section>
+
+  <!-- ============ 帮我选 ============ -->
+  <section class="page" id="page-decision">
+    <header class="page-header">
+      <button class="back-btn" type="button" onclick="navigate('page-home')" aria-label="返回"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button>
+      <div><h2>帮我选</h2><span class="ph-sub">输入选项，AI 帮你选最佳</span></div>
+    </header>
+    <div class="page-body">
+      <div class="card" id="pick-card">
+        <div class="pick-q-row"><input type="text" id="pick-question" placeholder="你在纠结什么？如：今天吃什么"></div>
+        <div class="pick-add-row">
+          <input type="text" id="pick-option" placeholder="输入一个选项，回车或点添加">
+          <button class="pick-add-btn" id="pick-add" type="button">添加</button>
+        </div>
+        <div class="pick-chips" id="pick-chips"></div>
+        <div class="pick-quick">
+          快速填入：<span class="pick-tpl" data-tpl="今天吃什么|麻辣烫,轻食沙拉,兰州拉面,黄焖鸡米饭,自己做饭">今天吃什么</span>
+          <span class="pick-tpl" data-tpl="周末去哪玩|爬山,逛展,宅家休息,约朋友吃饭">周末去哪</span>
+          <span class="pick-tpl" data-tpl="今晚怎么安排|看一部电影,运动 40 分钟,早点睡觉,读 30 页书">今晚安排</span>
+        </div>
+        <button class="mind-go" id="pick-go" type="button">AI 帮我选</button>
+      </div>
+      <div id="pick-result"></div>
+    </div>
+  </section>
+
+  <!-- ============ 心里有点乱 ============ -->
+  <section class="page" id="page-mind">
+    <header class="page-header">
+      <button class="back-btn" type="button" onclick="navigate('page-home')" aria-label="返回"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button>
+      <div><h2>心里有点乱</h2><span class="ph-sub">先接住情绪，再慢慢理</span></div>
+    </header>
+    <div class="page-body">
+      <div class="card" id="mind-step1">
+        <div class="mind-q">现在，你的心里装着什么？</div>
+        <div class="mood-chips" id="mood-chips">
+          <button type="button" data-mood="焦虑">焦虑</button>
+          <button type="button" data-mood="烦躁">烦躁</button>
+          <button type="button" data-mood="低落">低落</button>
+          <button type="button" data-mood="压力大">压力大</button>
+          <button type="button" data-mood="孤独">孤独</button>
+          <button type="button" data-mood="迷茫">迷茫</button>
+          <button type="button" data-mood="愤怒">愤怒</button>
+          <button type="button" data-mood="疲惫">疲惫</button>
+        </div>
+        <textarea id="mind-input" rows="3" placeholder="写下来就好，不用组织语言。比如：明天要汇报，总怕搞砸，一晚上都在想…"></textarea>
+        <div class="scale-box" style="margin-top:12px;">
+          <div class="scale-cap" style="margin-bottom:6px;">此刻的情绪强度（1 很轻 ~ 10 很重）</div>
+          <div class="scale-val" id="mind-score-val">5</div>
+          <input type="range" class="emotion-range" id="mind-score" min="1" max="10" value="5" aria-label="情绪强度">
+          <div class="range-ends"><span>1</span><span>10</span></div>
+        </div>
+        <button class="mind-go" id="mind-analyze" type="button">帮我分析</button>
+      </div>
+      <div id="mind-flow"></div>
+      <div class="callout safe" style="font-size:12px;">
+        <span class="co-title">安全边界</span>
+        本产品不做医疗或心理诊断。若你持续感到难以承受，请联系专业帮助。心理援助热线 12356。
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 工具箱 ============ -->
+  <section class="page" id="page-tools">
+    <header class="page-header">
+      <div><h2>工具箱</h2><span class="ph-sub">算一算、写一写的小事交给我</span></div>
+    </header>
+    <div class="page-body">
+      <div class="card">
+        <div class="calc-display">
+          <div class="cd-expr">算式</div>
+          <div class="cd-result mono" data-role="calcres">0</div>
+        </div>
+        <div class="calc-grid">
+          <button type="button" onclick="calcKey('7')">7</button>
+          <button type="button" onclick="calcKey('8')">8</button>
+          <button type="button" onclick="calcKey('9')">9</button>
+          <button type="button" class="op" onclick="calcKey('÷')">÷</button>
+          <button type="button" onclick="calcKey('4')">4</button>
+          <button type="button" onclick="calcKey('5')">5</button>
+          <button type="button" onclick="calcKey('6')">6</button>
+          <button type="button" class="op" onclick="calcKey('×')">×</button>
+          <button type="button" onclick="calcKey('1')">1</button>
+          <button type="button" onclick="calcKey('2')">2</button>
+          <button type="button" onclick="calcKey('3')">3</button>
+          <button type="button" class="op" onclick="calcKey('-')">−</button>
+          <button type="button" onclick="calcKey('0')">0</button>
+          <button type="button" onclick="calcKey('.')">.</button>
+          <button type="button" class="eq" onclick="calcEval()">=</button>
+          <button type="button" class="op" onclick="calcKey('+')">+</button>
+        </div>
+        <div style="margin-top:8px;display:flex;gap:8px;">
+          <button class="tab-item" style="border:1px solid var(--line);border-radius:10px;padding:8px 0;" type="button" onclick="calcClear()">清空</button>
+        </div>
+      </div>
+
+      <div class="section-label">时间计算</div>
+      <div class="card">
+        <div class="timer-tabs" role="tablist">
+          <button class="ttab active" id="tab-countdown" type="button" role="tab">倒计时</button>
+          <button class="ttab" id="tab-countup" type="button" role="tab">正向计时</button>
+        </div>
+        <div class="timer-add">
+          <input type="text" id="timer-name" placeholder="名称，如：考研 / 坚持早起">
+          <input type="datetime-local" id="timer-date" aria-label="选择日期时间">
+          <button class="timer-add-btn" id="timer-add-btn" type="button">添加</button>
+        </div>
+        <div class="timer-hint" id="timer-hint">倒计时：选一个未来的时间点，实时显示还剩多久</div>
+        <div id="timer-list"></div>
+      </div>
+
+      <div class="section-label">文字工具</div>
+      <div class="card">
+        <textarea id="wt-input" rows="4" placeholder="粘贴或输入一段文字，比如一段想发给同事的话、一段笔记…"></textarea>
+        <div class="wt-actions">
+          <button class="wt-btn primary" id="wt-polish" type="button">润色</button>
+          <button class="wt-btn" id="wt-summary" type="button">总结</button>
+        </div>
+        <div id="wt-out-wrap" style="display:none;">
+          <div style="font-size:12px;color:var(--muted);margin:10px 0 6px;" id="wt-out-label">结果</div>
+          <div id="wt-out" style="font-size:13px;padding:10px 12px;background:var(--primary-light);border-radius:10px;line-height:1.6;color:#35513C;white-space:pre-wrap;"></div>
+          <div style="margin-top:10px;display:flex;gap:6px;">
+            <button class="wt-btn" id="wt-copy" type="button" style="padding:7px 16px;font-size:12.5px;">复制</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 我的 ============ -->
+  <section class="page" id="page-me">
+    <header class="page-header">
+      <div><h2>我的</h2><span class="ph-sub">你的记忆与节奏，都由你掌控</span></div>
+    </header>
+    <div class="page-body">
+      <div class="card">
+        <div class="profile-row">
+          <span class="avatar">远</span>
+          <div class="pr-body">
+            <div class="pr-name">小远</div>
+            <div class="pr-sub">数据仅保存在本机</div>
+          </div>
+        </div>
+        <div class="mini-stat">
+          <div class="ms-cell clickable" id="ms-goals" role="button" tabindex="0"><div class="ms-num mono" id="ms-goals-num">0</div><div class="ms-cap">进行中目标</div></div>
+          <div class="ms-cell clickable" id="ms-decisions" role="button" tabindex="0"><div class="ms-num mono" id="ms-decisions-num">0</div><div class="ms-cap">历史决策</div></div>
+          <div class="ms-cell"><div class="ms-num mono" id="ms-days-num">1</div><div class="ms-cap">连续陪伴天数</div></div>
+        </div>
+      </div>
+
+      <div class="me-panel" id="panel-goals" style="display:none;">
+        <div class="card">
+          <div class="card-title"><span class="dot"></span>进行中的目标</div>
+          <div id="me-goal-list"></div>
+          <div class="me-add">
+            <input type="text" id="me-goal-title" placeholder="目标，如：3 个月考出雅思 7 分">
+            <input type="number" id="me-goal-days" placeholder="天数" min="1" max="365">
+            <button class="me-add-btn" id="me-goal-add" type="button">添加</button>
+          </div>
+        </div>
+      </div>
+      <div class="me-panel" id="panel-decisions" style="display:none;">
+        <div class="card">
+          <div class="card-title"><span class="dot"></span>历史决策</div>
+          <div id="me-decision-list"></div>
+          <div class="me-add">
+            <input type="text" id="me-dec-q" placeholder="纠结的事，如：今天吃什么">
+            <input type="text" id="me-dec-win" placeholder="最终选了什么，如：麻辣烫">
+            <button class="me-add-btn" id="me-dec-add" type="button">记录</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="section-label">分享给朋友</div>
+      <div class="card" style="text-align:center;">
+        <div class="card-title" style="justify-content:center;"><span class="dot"></span>扫码也能打开</div>
+        <div id="app-qr" style="display:flex;align-items:center;justify-content:center;padding:6px 0;"></div>
+        <div id="app-qr-url" style="font-size:11.5px;color:var(--muted);margin-top:8px;word-break:break-all;padding:0 10px;"></div>
+      </div>
+
+      <div class="section-label">情绪曲线 · 仅本人可见</div>
+      <div class="card">
+        <div class="card-title"><span class="dot"></span>情绪自评记录</div>
+        <div class="chart-mount" data-chart="emotion"></div>
+        <div id="me-mood-list" style="margin-top:8px;"></div>
+      </div>
+
+      <div class="section-label">设置</div>
+      <div class="card">
+        <div class="switch-row">
+          <div><div class="sr-label">每日计划提醒</div><div class="sr-desc">21:30 gentle nudge，不催促</div></div>
+          <button class="switch on" type="button" onclick="toggleSwitch(this)" aria-label="每日计划提醒"></button>
+        </div>
+        <div class="switch-row">
+          <div><div class="sr-label">情绪数据云端同步</div><div class="sr-desc">默认关闭，仅本地存储</div></div>
+          <button class="switch" type="button" onclick="toggleSwitch(this)" aria-label="情绪数据云端同步"></button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 底部导航 ============ -->
+  <nav class="page-tabbar" aria-label="导航">
+    <button class="tab-item active" type="button" data-nav="page-home" onclick="navigate('page-home')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-11.5 7.2L4 20l1-5A8 8 0 1 1 21 12z"/></svg>对话
+    </button>
+    <button class="tab-item" type="button" data-nav="page-plan" onclick="navigate('page-plan')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 12h10M4 18h7"/><path d="M17 15l2 2 3-3"/></svg>规划
+    </button>
+    <button class="tab-item" type="button" data-nav="page-decision" onclick="navigate('page-decision')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18M6 8l-3 6a4 4 0 0 0 6 0zM21 8l-3 6a4 4 0 0 0 6 0zM3 8h6M15 8h6"/></svg>帮我选
+    </button>
+    <button class="tab-item" type="button" data-nav="page-tools" onclick="navigate('page-tools')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="5" y="3" width="14" height="18" rx="3"/><path d="M9 7h6M8 12h.01M12 12h.01M16 12h.01M8 16h.01M12 16h.01M16 16h.01"/></svg>工具
+    </button>
+    <button class="tab-item" type="button" data-nav="page-me" onclick="navigate('page-me')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>我的
+    </button>
+  </nav>
+</div>
+
+<script src="./_shared/js/echarts.min.js"></script>
+<script src="/qrcode.min.js?v=20261015"></script>
+<script src="./assets/charts.js"></script>
+<script src="./assets/chat.js"></script>
+<script src="./assets/tools.js"></script>
+<script src="./assets/mind.js"></script>
+<script src="./assets/decision.js"></script>
+<script src="./assets/me.js"></script>
+<script>
+/* ---------- 页面导航 ---------- */
+function navigate(id) {
+  document.querySelectorAll('.page').forEach(function (p) { p.classList.toggle('active', p.id === id); });
+  document.querySelectorAll('.tab-item').forEach(function (t) { t.classList.toggle('active', t.getAttribute('data-nav') === id); });
+  if (id === 'page-me') {
+    if (window.LifePlannerCharts) window.LifePlannerCharts.attachAll();
+    renderAppQR();
+  }
+  if (id === 'page-plan') renderPlan();
+}
+/* ---------- app.html 内嵌二维码 ---------- */
+function renderAppQR() {
+  var box = document.getElementById('app-qr');
+  var urlEl = document.getElementById('app-qr-url');
+  if (!box || !urlEl) return;
+  var url = location.href;
+  urlEl.textContent = url;
+  if (typeof QRCode === 'undefined') {
+    box.innerHTML = '<div style="color:var(--muted);font-size:12px;">二维码库加载中…</div>';
+    setTimeout(renderAppQR, 400);
+    return;
+  }
+  box.innerHTML = '';
+  try {
+    new QRCode(box, { text: url, width: 180, height: 180, correctLevel: QRCode.CorrectLevel.M });
+  } catch (e) {
+    box.innerHTML = '<div style="color:#B4553F;font-size:12px;">二维码生成失败</div>';
+  }
+}
+/* ---------- 手动创建目标 ---------- */
+function domainStages(domain) {
+  // 复用 chat.js 的领域分阶段思路，但独立于对话触发
+  var map = {
+    '学习': [
+      { n: '打基础', d: '教材/讲义过一遍，做基础题，建立知识框架' },
+      { n: '强化训练', d: '真题 + 专项训练，每周一次模考批改' },
+      { n: '冲刺巩固', d: '查漏补缺，错题复盘，保持手感到考试' }
+    ],
+    '健身': [
+      { n: '养成习惯', d: '每周 3 次，每次 30 分钟低强度，固定时间段' },
+      { n: '科学加量', d: '每次 45-60 分钟，覆盖力量 + 有氧，注意饮食' },
+      { n: '固化节奏', d: '形成稳定的训练 + 作息 + 饮食节律，不中断' }
+    ],
+    '存钱': [
+      { n: '记账摸清', d: '每笔支出记 7 天，找出"隐形漏斗"' },
+      { n: '设定管道', d: '发薪日先存，剩余再花；开一张只存不花的卡' },
+      { n: '坚守目标', d: '每月复盘，小额奖励，大目标前不动用' }
+    ],
+    '工作': [
+      { n: '梳理方向', d: '明确下一阶段最重要的 1-2 件事，拆解成周计划' },
+      { n: '稳步推进', d: '每天 3 个番茄，周复盘进度和阻塞' },
+      { n: '验收输出', d: '对齐汇报，沉淀方法或文档，为下阶段铺路' }
+    ],
+    '健康': [
+      { n: '观察记录', d: '连续 7 天记录睡眠/饮食/情绪的真实状态' },
+      { n: '一个小改变', d: '只改一件事（比如 23 点前关灯/每天 8 杯水），坚持 21 天' },
+      { n: '固化与扩展', d: '小改变稳定后再加一个，形成属于自己的节律' }
+    ],
+    '自定义': [
+      { n: '方向确认', d: '把"想做什么"写清楚，做到什么程度算成' },
+      { n: '节奏建立', d: '每周固定投入时间，不让目标被日常冲散' },
+      { n: '复盘迭代', d: '每 2 周回看一次，微调节奏，保持方向感' }
+    ]
+  };
+  return map[domain] || map['自定义'];
+}
+document.addEventListener('DOMContentLoaded', function () {
+  var addBtn = document.getElementById('pg-add');
+  if (!addBtn) return;
+  addBtn.addEventListener('click', function () {
+    var title = (document.getElementById('pg-title').value || '').trim();
+    var domain = document.getElementById('pg-domain').value;
+    var days = parseInt(document.getElementById('pg-days').value, 10);
+    if (!title) { alert('请填写目标名称'); return; }
+    if (!days || days < 1) { alert('请填写有效天数'); return; }
+    var stages = domainStages(domain);
+    var p1 = Math.max(3, Math.round(days * 0.3));
+    var p2 = Math.max(3, Math.round(days * 0.5));
+    var p3 = Math.max(2, days - p1 - p2);
+    var goal = {
+      title: title, domain: domain, days: days, ts: Date.now(),
+      milestones: stages.map(function (s, i) {
+        return { name: s.n, desc: s.d, days: [p1, p2, p3][i] };
+      })
+    };
+    var goals = [];
+    try { goals = JSON.parse(localStorage.getItem('lsp.goals') || '[]'); } catch (e) {}
+    goals.unshift(goal);
+    try { localStorage.setItem('lsp.goals', JSON.stringify(goals)); } catch (e) {}
+    document.getElementById('pg-title').value = '';
+    document.getElementById('pg-days').value = '';
+    renderPlan();
+    if (window.lspRefreshMe) window.lspRefreshMe();
+    // 跳到里程碑部分让用户看到效果
+    document.getElementById('plan-milestones').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
+});
+/* ---------- 计算器 ---------- */
+var calcExpr = '';
+var calcEl = document.querySelector('[data-role="calcres"]');
+function calcKey(ch) { calcExpr += ch; calcEl.textContent = calcExpr; }
+function calcClear() { calcExpr = ''; calcEl.textContent = '0'; }
+function calcEval() {
+  if (!calcExpr) return;
+  var safe = calcExpr.replace(/×/g, '*').replace(/÷/g, '/').replace(/−/g, '-');
+  if (!/^[0-9+\-*/.() ]+$/.test(safe)) { calcEl.textContent = '不支持'; return; }
+  try {
+    var r = Function('"use strict";return (' + safe + ')')();
+    calcExpr = String(r);
+    calcEl.textContent = Number(r).toLocaleString('en-US');
+  } catch (e) { calcEl.textContent = '算式有误'; }
+}
+function toggleSwitch(el) { el.classList.toggle('on'); }
+/* ---------- 目标页渲染（从 lsp.goals） ---------- */
+function renderPlan() {
+  var goals = [];
+  try { goals = JSON.parse(localStorage.getItem('lsp.goals') || '[]'); } catch (e) {}
+  var listEl = document.getElementById('plan-goal-list');
+  listEl.innerHTML = '';
+  if (!goals.length) {
+    listEl.innerHTML = '<div style="font-size:12.5px;color:var(--muted);text-align:center;padding:10px 0;">还没有目标。回到「对话」说一句你的目标，我帮你拆。</div>';
+    return;
+  }
+  var g = goals[0];
+  var dayN = Math.min(g.days, Math.max(1, Math.ceil((Date.now() - g.ts) / 86400000)));
+  var pct = Math.round(dayN / g.days * 100);
+  document.querySelector('#page-plan .goal-hero h3').textContent = g.title;
+  document.querySelector('#page-plan .gh-meta').textContent = (g.domain || '自定义目标') + ' · 第 ' + dayN + ' 天';
+  document.querySelector('#page-plan .countdown b').textContent = Math.max(0, g.days - dayN);
+  document.getElementById('plan-progress').style.width = pct + '%';
+  var ms = document.getElementById('plan-milestones');
+  if (g.milestones && g.milestones.length) {
+    ms.innerHTML = '';
+    g.milestones.forEach(function (m, mIdx) { ms.appendChild(buildMilestoneBlock(m, mIdx, goals)); });
+    // "+ 添加里程碑" 按钮
+    var add = document.createElement('button');
+    add.className = 'ms-add'; add.type = 'button';
+    add.textContent = '+ 添加里程碑';
+    add.addEventListener('click', function () {
+      g.milestones.push({ name: '新阶段', desc: '描述你要做什么', days: 7 });
+      persistGoals(goals);
+      renderPlan();
+    });
+    ms.appendChild(add);
+  }
+
+  function buildMilestoneBlock(m, mIdx, goals) {
+    var block = document.createElement('div');
+    block.className = 'ms-block';
+    block.dataset.idx = mIdx;
+    // title row
+    var titleRow = document.createElement('div');
+    titleRow.style.display = 'flex'; titleRow.style.alignItems = 'center'; titleRow.style.gap = '6px';
+    var titleEl = document.createElement('span');
+    titleEl.className = 'ms-t'; titleEl.textContent = m.name;
+    var daysEl = document.createElement('span');
+    daysEl.className = 'ms-days';
+    daysEl.textContent = m.days ? ('约 ' + m.days + ' 天') : '';
+    titleRow.appendChild(titleEl); titleRow.appendChild(daysEl);
+    block.appendChild(titleRow);
+    // desc
+    var descEl = document.createElement('div');
+    descEl.className = 'ms-d'; descEl.textContent = m.desc || '';
+    block.appendChild(descEl);
+    // actions (hover visible)
+    var actions = document.createElement('div');
+    actions.className = 'ms-actions';
+    var editBtn = document.createElement('button'); editBtn.type = 'button'; editBtn.textContent = '✎'; editBtn.title = '编辑';
+    var delBtn = document.createElement('button'); delBtn.type = 'button'; delBtn.textContent = '×'; delBtn.title = '删除里程碑';
+    actions.appendChild(editBtn); actions.appendChild(delBtn);
+    block.appendChild(actions);
+
+    function enterEdit() {
+      // 替换内容为输入框
+      block.innerHTML = '';
+      var nameInput = document.createElement('input');
+      nameInput.type = 'text'; nameInput.value = m.name;
+      nameInput.placeholder = '里程碑名称';
+      var daysInput = document.createElement('input');
+      daysInput.type = 'number'; daysInput.min = '1'; daysInput.value = m.days || '';
+      daysInput.placeholder = '天数'; daysInput.style.width = '70px';
+      var descInput = document.createElement('textarea');
+      descInput.value = m.desc || ''; descInput.placeholder = '这一阶段具体做什么';
+      var saveBtn = document.createElement('button');
+      saveBtn.type = 'button';
+      saveBtn.textContent = '保存';
+      saveBtn.style.cssText = 'padding:7px 14px;border:none;border-radius:8px;background:var(--sage,#8FB996);color:#fff;font:inherit;font-size:12.5px;cursor:pointer;white-space:nowrap';
+      var cancelBtn = document.createElement('button');
+      cancelBtn.type = 'button'; cancelBtn.textContent = '取消';
+      cancelBtn.style.cssText = 'padding:7px 12px;border:1px solid var(--line,#ECE6DC);background:#fff;border-radius:8px;font:inherit;font-size:12.5px;color:var(--muted);cursor:pointer';
+
+      var r1 = document.createElement('div'); r1.className = 'ms-edit-row';
+      r1.appendChild(nameInput); r1.appendChild(daysInput);
+      var r2 = document.createElement('div'); r2.className = 'ms-edit-row';
+      r2.appendChild(descInput);
+      var r3 = document.createElement('div'); r3.className = 'ms-edit-row';
+      r3.style.justifyContent = 'flex-end';
+      r3.appendChild(cancelBtn); r3.appendChild(saveBtn);
+      block.appendChild(r1); block.appendChild(r2); block.appendChild(r3);
+
+      nameInput.focus(); nameInput.select();
+
+      function doSave() {
+        var newName = nameInput.value.trim() || m.name;
+        var newDays = parseInt(daysInput.value, 10);
+        if (!newDays || newDays < 1) newDays = m.days || 7;
+        var newDesc = descInput.value.trim();
+        g.milestones[mIdx] = { name: newName, days: newDays, desc: newDesc };
+        persistGoals(goals);
+        renderPlan();
+      }
+      saveBtn.addEventListener('click', doSave);
+      cancelBtn.addEventListener('click', function () { renderPlan(); });
+      nameInput.addEventListener('keydown', function (e) { if (e.key === 'Enter') doSave(); if (e.key === 'Escape') renderPlan(); });
+      descInput.addEventListener('keydown', function (e) { if (e.key === 'Escape') renderPlan(); });
+    }
+
+    editBtn.addEventListener('click', enterEdit);
+    titleEl.addEventListener('click', enterEdit);
+    descEl.addEventListener('click', enterEdit);
+    delBtn.addEventListener('click', function () {
+      if (g.milestones.length <= 1) { alert('至少保留一个里程碑哦'); return; }
+      if (!confirm('删除这个里程碑？')) return;
+      g.milestones.splice(mIdx, 1);
+      persistGoals(goals);
+      renderPlan();
+    });
+    return block;
+  }
+  function persistGoals(goals) {
+    try { localStorage.setItem('lsp.goals', JSON.stringify(goals)); } catch (e) {}
+  }
+  goals.forEach(function (gg, gIdx) {
+    var dN = Math.min(gg.days, Math.max(1, Math.ceil((Date.now() - gg.ts) / 86400000)));
+    var row = document.createElement('div');
+    row.className = 'ms-block';
+    row.innerHTML = '<div style="display:flex;align-items:center;gap:8px;"><div class="ms-t" style="flex:1"></div><button class="plan-del" data-idx="' + gIdx + '" style="border:none;background:transparent;color:var(--muted);cursor:pointer;font-size:16px;padding:2px 6px;border-radius:8px;" title="删除">×</button></div><div class="ms-d">' + (gg.domain || '') + ' · 第 ' + dN + ' / ' + gg.days + ' 天</div>';
+    row.querySelector('.ms-t').textContent = gg.title;
+    listEl.appendChild(row);
+  });
+  listEl.querySelectorAll('.plan-del').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var arr = [];
+      try { arr = JSON.parse(localStorage.getItem('lsp.goals') || '[]'); } catch (e) {}
+      arr.splice(parseInt(btn.getAttribute('data-idx'), 10), 1);
+      try { localStorage.setItem('lsp.goals', JSON.stringify(arr)); } catch (e) {}
+      renderPlan();
+      if (window.lspRefreshMe) window.lspRefreshMe();
+    });
+  });
+}
+/* ---------- 陪伴天数徽标 ---------- */
+(function () {
+  var first = 0;
+  try { first = JSON.parse(localStorage.getItem('lsp.firstUse') || '0'); } catch (e) {}
+  if (!first) { first = Date.now(); try { localStorage.setItem('lsp.firstUse', JSON.stringify(first)); } catch (e) {} }
+  var n = Math.max(1, Math.floor((Date.now() - first) / 86400000) + 1);
+  var chip = document.getElementById('home-days');
+  if (chip) chip.textContent = '第 ' + n + ' 天陪伴';
+})();
+/* ---------- 情绪记录列表 ---------- */
+function renderMoodList() {
+  var moods = [];
+  try { moods = JSON.parse(localStorage.getItem('lsp.moods') || '[]'); } catch (e) {}
+  var box = document.getElementById('me-mood-list');
+  if (!box) return;
+  if (!moods.length) { box.innerHTML = '<div style="font-size:12px;color:var(--muted)">还没有记录。去「心里有点乱」做一次梳理试试。</div>'; return; }
+  box.innerHTML = moods.slice(-7).reverse().map(function (m) {
+    var d = new Date(m.ts);
+    return '<div style="display:flex;justify-content:space-between;font-size:12px;padding:5px 2px;border-bottom:1px dashed var(--line);"><span>' +
+      (d.getMonth() + 1) + '/' + d.getDate() + ' ' + (m.note || '自评') + '</span><b style="color:var(--primary-deep)">' + m.score + ' 分</b></div>';
+  }).join('');
+}
+document.querySelector('[data-nav="page-me"]').addEventListener('click', function () {
+  setTimeout(renderMoodList, 60);
+});
+renderPlan();
+</script>
+</body>
+</html>

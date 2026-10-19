@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>扫码进入 · 生活小规划师</title>
+<style>
+  :root{
+    --sage:#8FB996; --sage-deep:#4F7057; --warm:#E8A87C;
+    --cream:#FAF7F2; --ink:#33413A; --muted:#8A8178;
+    --card:#FFFFFF; --line:#ECE6DC;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{
+    background:var(--cream); color:var(--ink);
+    font-family:"Microsoft YaHei","PingFang SC","Hiragino Sans GB",sans-serif;
+    font-size:15px; line-height:1.6;
+    display:flex; align-items:center; justify-content:center; padding:32px 20px;
+  }
+  .card{
+    background:var(--card); border:1px solid var(--line); border-radius:16px;
+    padding:40px 44px 32px; width:100%; max-width:520px; text-align:center;
+    box-shadow:0 12px 40px rgba(51,65,58,.08);
+  }
+  .eyebrow{
+    display:inline-block; font-size:12px; letter-spacing:.14em; color:var(--sage-deep);
+    background:rgba(143,185,150,.16); border-radius:100px; padding:5px 14px; margin-bottom:18px;
+  }
+  h1{font-size:24px; font-weight:600; letter-spacing:.01em; margin-bottom:6px}
+  .sub{color:var(--muted); font-size:14px; margin-bottom:26px}
+  .qr{
+    width:320px; height:320px; margin:0 auto; padding:18px;
+    border:1px solid var(--line); border-radius:16px; background:#fff;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .qr img,.qr canvas,.qr table{border:0; display:block}
+  .url{
+    margin:22px auto 0; max-width:420px; font-size:14px;
+    font-family:ui-monospace,Consolas,"Courier New",monospace;
+    color:var(--sage-deep); background:rgba(143,185,150,.12);
+    border-radius:12px; padding:11px 14px; word-break:break-all; user-select:all;
+  }
+  .actions{display:flex; gap:10px; justify-content:center; margin-top:20px; flex-wrap:wrap}
+  button,.btn{
+    font:inherit; font-size:14px; cursor:pointer; border-radius:12px;
+    padding:10px 22px; border:1px solid transparent; transition:.18s;
+  }
+  #copy{background:var(--sage); color:#fff}
+  #copy:hover{background:var(--sage-deep)}
+  .open{background:#fff; color:var(--sage-deep); border-color:var(--line); text-decoration:none}
+  .open:hover{border-color:var(--sage)}
+  .tips{
+    margin-top:26px; padding-top:22px; border-top:1px dashed var(--line);
+    text-align:left; color:var(--muted); font-size:13.5px;
+  }
+  .tips li{list-style:none; display:flex; gap:9px; margin-bottom:9px}
+  .tips li::before{content:""; flex:0 0 auto; width:6px; height:6px; border-radius:50%;
+    background:var(--warm); margin-top:8px}
+  .tips b{color:var(--ink); font-weight:600}
+  #fail{display:none; color:#B4553F; font-size:14px; margin-top:16px}
+</style>
+</head>
+<body>
+  <main class="card">
+    <div class="eyebrow">生活小规划师 · 交互原型</div>
+    <h1>用手机扫一扫进入</h1>
+    <p class="sub">扫码后可点击原型，与右侧 PRD 需求详情联动</p>
+
+    <div class="qr" id="qr"></div>
+    <div class="url" id="url"></div>
+
+    <div class="actions">
+      <button id="copy">复制地址</button>
+      <a class="btn open" href="/life-planner-prototype.html" target="_blank" rel="noopener">在电脑上打开</a>
+    </div>
+
+    <div id="fail">二维码渲染失败，请直接手动输入上方地址。</div>
+
+    <ul class="tips">
+      <li><span><b>手机必须与这台电脑连同一个 WiFi</b>，用流量打不开（这是内网地址）。</strong></span></li>
+      <li><span>打开后若样式或图表缺失，说明服务未运行；重新执行启动脚本即可。</span></li>
+      <li><span>页面为手机竖屏优化，建议竖持使用；也可横屏查看右侧文档。</span></li>
+    </ul>
+  </main>
+
+  <script src="/qr/qrcode.min.js?v=20261015"></script>
+  <script>
+    var TARGET = (function () {
+      var h = location.hostname || '';
+      var isLan = /^(192\.168\.|10\.|172\.(1[6-9]|2[0-9]|3[01])\.|localhost|127\.)/.test(h);
+      // 公网访问时二维码指向当前公网地址；局域网访问时指向公网隧道地址，手机扫码即可跨网络打开
+      if (h && !isLan) return location.origin + '/app.html';
+      return 'https://dealtime-plane-parents-silly.trycloudflare.com/app.html';
+    })();
+    document.getElementById('url').textContent = TARGET;
+
+    function render() {
+      var fail = document.getElementById('fail');
+      if (typeof QRCode === 'undefined') {
+        fail.style.display = 'block';
+        // 尝试重试一次（有些浏览器脚本加载稍慢）
+        setTimeout(render, 400);
+        return;
+      }
+      var container = document.getElementById('qr');
+      container.innerHTML = ''; // 清空以防缓存叠加
+      try {
+        new QRCode(container, {
+          text: TARGET,
+          width: 284,
+          height: 284,
+          colorDark: '#33413A',
+          colorLight: '#FFFFFF',
+          correctLevel: QRCode.CorrectLevel.M
+        });
+      } catch (e) {
+        fail.style.display = 'block';
+        fail.textContent = '二维码生成异常：' + e.message;
+      }
+    }
+    render();
+
+    document.getElementById('copy').addEventListener('click', function () {
+      var btn = this;
+      var done = function () { btn.textContent = '已复制'; setTimeout(function () { btn.textContent = '复制地址'; }, 1600); };
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(TARGET).then(done, function () { fallback(); });
+      } else { fallback(); }
+      function fallback() {
+        var ta = document.createElement('textarea');
+        ta.value = TARGET; document.body.appendChild(ta); ta.select();
+        try { document.execCommand('copy'); done(); } catch (e) {}
+        document.body.removeChild(ta);
+      }
+    });
+  </script>
+</body>
+</html>
